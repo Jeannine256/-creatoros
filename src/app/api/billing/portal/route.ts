@@ -1,10 +1,13 @@
-import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function GET() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return new Response('Billing not configured', { status: 503 })
+  }
+
+  const Stripe = (await import('stripe')).default
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
